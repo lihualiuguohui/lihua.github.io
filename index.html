@@ -3,82 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-
     <style>
-        select {
-            width: 180px;
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        .all {
+            width: 500px;
             height: 200px;
-            background-color: #ccc;
-            font-size: 18px;
+            margin: 100px auto;
+            padding: 7px;
+            border: 1px solid #ccc;
+            position: relative;
+        }
+        .screen {
+            width: 500px;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+        ul {
+            list-style: none;
+            width: 600%;
+            position: relative;
+            left:0px;
+
+        }
+        ul li {
+            float:left;
+            width: 500px;
+            height: 200px;
+        }
+        ol {
+            list-style: none;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+
+            
+
+        }
+       .all ol li{
+
+            float:left;
+            width:20px;
+            height: 20px;
+           text-align: center;
+           line-height: 20px;
+            background-color: #fff;
+           border: 1px solid #ccc;
+
+           margin-left: 10px;
+
+           cursor: pointer;
+        }
+        #arr {
+            display: none;
+        }
+        #arr span {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left:10px;
+            top :50%;
+            margin-top:-20px;
+            background: #000;
+            cursor: pointer;
+            line-height: 40px;
+            text-align: center;
+            font:700 30px/40px "黑体";
+            opacity: 0.3;
+            border: 1px solid #fff;
+            color: #fff;
+
+        }
+        #arr #right {
+            right: 10px;
+            left: auto  ;
+        }
+       .all ol  .current {
+            background-color: darkorange;
         }
     </style>
     <script>
         window.onload = function () {
-            var btnArr = document.getElementsByTagName("button");
-            var sel1 = document.getElementById("sel1");
-            var sel2 = document.getElementById("sel2");
+            var all = document.getElementById("all");
+            var screen=all.children[0];
+            var inerWidth = screen.offsetWidth;
+            var ul = screen.firstElementChild ||screen.firstChild;
+            var ol = screen.children[1];
+            var arr = screen.lastElementChild || screen.lastChild;
+            var btnArr = arr.children;
 
-            //这里要注意，不能直接写成 btnArr[0].onclick = fn1(sel1,sel2);这样写执行结果是
-            //错误的，原因是如果向上面那样写，则btnArr[0].onclick执行的时候执行的是fn1(sel1,sel2)
-            //的返值，为了避免这种情况，只有在点击之后才执行fn1(sel1,sel2);
-            //则在用一个函数包装
-            btnArr[0].onclick = function () {
-                fn1(sel1,sel2);
-            }
-            btnArr[1].onclick = function () {
-                fn1(sel2,sel1);
-            }
-            btnArr[2].onclick = function () {
-                fn2(sel1,sel2);
-            }
-            btnArr[3].onclick = function () {
-                fn2(sel2,sel1);
+            var newL = ul.children[0].cloneNode(true);
+            ul.appendChild(newL);
+//        创建OL中的li标签
+            //步骤:1、
+            //var liArr = ul.getElementsByTagName("li");
+            for(var i = 0 ; i<ul.children.length-1;i++) {
 
+                var newLi = document.createElement("li");
+                newLi.innerHTML=i+1;
+                ol.appendChild(newLi);
             }
+            var index = 0;
+            var quare = 0;
+            var timer = null;
+            var olArr = ol.children;
+            screen.onmouseover = function () {
+                arr.style.display = "block";
+                clearInterval(timer);
+            }
+            screen.onmouseout = function () {
+                arr.style.display = "none";
+                timer = setInterval(autoPlay,1000);
+            }
+            timer = setInterval(autoPlay,1000);
 
-            function fn1(ele1,ele2) {
-                var newNode =  ele1.children;
-                for(var i = newNode.length-1 ; i>=0;i--) {
-                    ele2.appendChild(newNode[newNode.length-1-i]);
-                }
-            }
-            function fn2(ele1,ele2) {
-                var newNode =  ele1.children;
-                for(var i = newNode.length-1 ; i >=0;i--)
+            function autoPlay() {
+                index++;
+                quare++;
+                if(index>olArr.length)
                 {
-                    if(newNode[i].selected === true)
-                    {
-                        ele2.appendChild(newNode[i]);
-                    }
+                    index =1;
+                    ul.style.left = 0;
                 }
-
+                if(quare>olArr.length-1){
+                    quare=0;
+                }
+                fn(ul,-index*inerWidth);
+                for(var j=0;j < olArr.length;j++){
+                    olArr[j].className="";
+                }
+                olArr[quare].className = "current";
             }
 
+            olArr[0].className="current";
+            for(var i = 0 ;i <olArr.length;i++){
+                olArr[i].index = i;
+                olArr[i].onmouseover = function () {
+
+                    for(var j=0;j < olArr.length;j++){
+                        olArr[j].className="";
+                    }
+                    this.className = "current";
+                    quare = this.index;
+                    index = this.index;
+                    fn(ul,-this.index*inerWidth);
+                }
+            }
+
+            btnArr[0].onclick= function () {
+                autoPlay();
+            }
+            btnArr[1].onclick= function () {
+                index--;
+                quare--;
+                for(var j=0;j < olArr.length;j++){
+                    olArr[j].className="";
+                }
+                if(index<0)
+                {
+                   ul.style.left = -inerWidth*(olArr.length)+"px";
+                    index = olArr.length-1;
+                }
+                if(quare<0){
+                    quare = olArr.length-1;
+                }
+                olArr[quare].className = "current";
+                fn(ul,-index*inerWidth);
+            }
+
+            function fn(ele,target){
+                clearInterval(ele.timer);
+                var speed = target > ele.offsetLeft ? 10 : -10;
+                ele.timer = setInterval(function () {
+                    var val = target - ele.offsetLeft;
+                    ele.style.left = ele.offsetLeft + speed + "px";
+                    if(Math.abs(val)<=Math.abs(speed)){
+                        ele.style.left = target + "px";
+                        clearInterval(ele.timer);
+                    }
+
+                },10)
+            }
 
         }
+
+
 
     </script>
 </head>
 <body>
-  <div>
-
-
-      <select name="" size="10" id="sel1" multiple>
-          <option value="0">香蕉</option>
-          <option value="1">苹果</option>
-          <option value="2">鸭梨</option>
-          <option value="3">葡萄</option>
-      </select>
-      <button>>>></button>
-      <button><<<</button>
-      <button>></button>
-      <button><</button>
-      <select name="" size="10" id="sel2" multiple>
-
-      </select>
-
-  </div>
-
-
+    <div class="all" id="all">
+        <div class="screen" id="screen">
+            <ul>
+                <li><img src="images/1.jpg" alt=""></li>
+                <li><img src="images/2.jpg" alt=""></li>
+                <li><img src="images/3.jpg" alt=""></li>
+                <li><img src="images/4.jpg" alt=""></li>
+                <li><img src="images/5.jpg" alt=""></li>
+            </ul>
+            <ol>
+                <!--<li class="current">1</li>-->
+                <!--<li>2</li>-->
+                <!--<li>3</li>-->
+                <!--<li>4</li>-->
+                <!--<li>5</li>-->
+            </ol>
+            <div id="arr">
+                <span id="left"><</span>
+                <span id="right">></span>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
